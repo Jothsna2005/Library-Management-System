@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Library Management System</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      margin: 0; padding: 20px;
+    }
+    .container {
+      max-width: 700px;
+      margin: auto;
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    h1, h2 {
+      text-align: center;
+      color: #333;
+    }
+    label {
+      display: block;
+      margin-top: 12px;
+      color: #555;
+    }
+    input[type="text"], input[type="email"], input[type="password"], input[type="date"] {
+      width: 100%;
+      padding: 10px;
+      margin-top: 6px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+    button {
+      margin-top: 20px;
+      background-color: #007bff;
+      color: white;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      width: 100%;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+      text-align: left;
+    }
+    th {
+      background-color: #f0f0f0;
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- LOGIN PAGE -->
+  <div id="loginPage">
+    <h1>Login</h1>
+    <label for="email">Email</label>
+    <input type="email" id="email" placeholder="Enter your email" />
+    <label for="password">Password</label>
+    <input type="password" id="password" placeholder="Enter your password" />
+    <button id="loginBtn">Login</button>
+  </div>
+
+  <!-- DASHBOARD PAGE -->
+  <div id="dashboardPage" class="hidden">
+    <h1>Library Dashboard</h1>
+
+    <h2>Add Book</h2>
+    <label for="bookTitle">Book Title</label>
+    <input type="text" id="bookTitle" placeholder="Enter book title" />
+    <label for="bookAuthor">Author</label>
+    <input type="text" id="bookAuthor" placeholder="Enter author name" />
+    <button id="addBookBtn">Add Book</button>
+
+    <h2>Books List</h2>
+    <table>
+      <thead>
+        <tr><th>Title</th><th>Author</th><th>Status</th></tr>
+      </thead>
+      <tbody id="booksTableBody"></tbody>
+    </table>
+
+    <h2>Issue Book</h2>
+    <label for="issueBookSelect">Select Book</label>
+    <select id="issueBookSelect"></select>
+    <label for="borrowDate">Borrow Date</label>
+    <input type="date" id="borrowDate" />
+    <label for="dueDate">Due Date</label>
+    <input type="date" id="dueDate" />
+    <button id="issueBookBtn">Issue Book</button>
+
+    <h2>Issued Books</h2>
+    <table>
+      <thead>
+        <tr><th>Title</th><th>Borrow Date</th><th>Due Date</th><th>Days Overdue</th><th>Penalty (₹)</th></tr>
+      </thead>
+      <tbody id="issuedBooksBody"></tbody>
+    </table>
+
+    <button id="logoutBtn" style="background:#dc3545;margin-top:40px;">Logout</button>
+  </div>
+</div>
+
+<script>
+  let books = [];
+  let issuedBooks = [];
+
+  const loginPage = document.getElementById('loginPage');
+  const dashboardPage = document.getElementById('dashboardPage');
+  const loginBtn = document.getElementById('loginBtn');
+  const emailInput = document.getElementById('email');
+  const passwordInput = document.getElementById('password');
+
+  const bookTitleInput = document.getElementById('bookTitle');
+  const bookAuthorInput = document.getElementById('bookAuthor');
+  const addBookBtn = document.getElementById('addBookBtn');
+  const booksTableBody = document.getElementById('booksTableBody');
+  const issueBookSelect = document.getElementById('issueBookSelect');
+  const borrowDateInput = document.getElementById('borrowDate');
+  const dueDateInput = document.getElementById('dueDate');
+  const issueBookBtn = document.getElementById('issueBookBtn');
+  const issuedBooksBody = document.getElementById('issuedBooksBody');
+  const logoutBtn = document.getElementById('logoutBtn');
+
+  // Login
+  loginBtn.addEventListener('click', () => {
+    const email = emailInput.value.trim();
+    const password = passwordInput.value.trim();
+
+    if (email === '' || password === '') {
+      alert('Please enter both email and password.');
+      return;
+    }
+
+    // Hardcoded credentials
+    if (email === 'admin@example.com' && password === 'admin123') {
+      loginPage.classList.add('hidden');
+      dashboardPage.classList.remove('hidden');
+      refreshBooksTable();
+      refreshIssueBookSelect();
+      refreshIssuedBooksTable();
+    } else {
+      alert('Invalid email or password!');
+    }
+  });
+
+  // Logout
+  logoutBtn.addEventListener('click', () => {
+    dashboardPage.classList.add('hidden');
+    loginPage.classList.remove('hidden');
+    emailInput.value = '';
+    passwordInput.value = '';
+    bookTitleInput.value = '';
+    bookAuthorInput.value = '';
+    borrowDateInput.value = '';
+    dueDateInput.value = '';
+    books = [];
+    issuedBooks = [];
+    booksTableBody.innerHTML = '';
+    issuedBooksBody.innerHTML = '';
+    issueBookSelect.innerHTML = '';
+  });
+
+  // Add Book
+  addBookBtn.addEventListener('click', () => {
+    const title = bookTitleInput.value.trim();
+    const author = bookAuthorInput.value.trim();
+    if (!title || !author) {
+      alert('Please enter both book title and author.');
+      return;
+    }
+    books.push({ id: Date.now(), title, author, available: true });
+    bookTitleInput.value = '';
+    bookAuthorInput.value = '';
+    refreshBooksTable();
+    refreshIssueBookSelect();
+  });
+
+  function refreshBooksTable() {
+    booksTableBody.innerHTML = '';
+    books.forEach(book => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${book.title}</td>
+        <td>${book.author}</td>
+        <td>${book.available ? 'Available' : 'Issued'}</td>
+      `;
+      booksTableBody.appendChild(tr);
+    });
+  }
+
+  function refreshIssueBookSelect() {
+    issueBookSelect.innerHTML = '';
+    const availableBooks = books.filter(b => b.available);
+    if (availableBooks.length === 0) {
+      const option = document.createElement('option');
+      option.text = 'No books available';
+      option.disabled = true;
+      option.selected = true;
+      issueBookSelect.add(option);
+      return;
+    }
+    availableBooks.forEach(book => {
+      const option = document.createElement('option');
+      option.value = book.id;
+      option.text = `${book.title} by ${book.author}`;
+      issueBookSelect.add(option);
+    });
+  }
+
+  issueBookBtn.addEventListener('click', () => {
+    const bookId = parseInt(issueBookSelect.value);
+    const borrowDate = borrowDateInput.value;
+    const dueDate = dueDateInput.value;
+
+    if (!bookId || !borrowDate || !dueDate) {
+      alert('Please select a book and enter borrow and due dates.');
+      return;
+    }
+    if (new Date(dueDate) <= new Date(borrowDate)) {
+      alert('Due date must be after borrow date.');
+      return;
+    }
+
+    const book = books.find(b => b.id === bookId);
+    if (!book || !book.available) {
+      alert('Selected book is not available.');
+      return;
+    }
+    book.available = false;
+
+    issuedBooks.push({
+      id: book.id,
+      title: book.title,
+      borrowDate,
+      dueDate
+    });
+
+    borrowDateInput.value = '';
+    dueDateInput.value = '';
+    refreshBooksTable();
+    refreshIssueBookSelect();
+    refreshIssuedBooksTable();
+  });
+
+  function refreshIssuedBooksTable() {
+    issuedBooksBody.innerHTML = '';
+    const today = new Date();
+    issuedBooks.forEach(issued => {
+      const borrow = new Date(issued.borrowDate);
+      const diffDays = Math.floor((today - borrow) / (1000 * 60 * 60 * 24));
+      const daysOverdue = diffDays > 20 ? diffDays - 20 : 0;
+      const penalty = daysOverdue * 1;
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${issued.title}</td>
+        <td>${issued.borrowDate}</td>
+        <td>${issued.dueDate}</td>
+        <td>${daysOverdue}</td>
+        <td>₹${penalty}</td>
+      `;
+      issuedBooksBody.appendChild(tr);
+    });
+  }
+</script>
+
+</body>
+</html>
