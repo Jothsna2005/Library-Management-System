@@ -142,7 +142,7 @@
   const issuedBooksBody = document.getElementById('issuedBooksBody');
   const logoutBtn = document.getElementById('logoutBtn');
 
-  // Login
+  // ✅ Login (Accept Any Email & Password)
   loginBtn.addEventListener('click', () => {
     const email = emailInput.value.trim();
     const password = passwordInput.value.trim();
@@ -152,16 +152,12 @@
       return;
     }
 
-    // Hardcoded credentials
-    if (email === 'admin@example.com' && password === 'admin123') {
-      loginPage.classList.add('hidden');
-      dashboardPage.classList.remove('hidden');
-      refreshBooksTable();
-      refreshIssueBookSelect();
-      refreshIssuedBooksTable();
-    } else {
-      alert('Invalid email or password!');
-    }
+    // No hardcoded check: accept any email and password
+    loginPage.classList.add('hidden');
+    dashboardPage.classList.remove('hidden');
+    refreshBooksTable();
+    refreshIssueBookSelect();
+    refreshIssuedBooksTable();
   });
 
   // Logout
